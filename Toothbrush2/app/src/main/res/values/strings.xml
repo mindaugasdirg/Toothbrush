@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ToothBrush</string>
+    <string name="username">Vardas</string>
+    <string name="level">1 lygis</string>
+    <string name="registration">Prisijungimas</string>
+    <string name="save_button">Prisijungti</string>
+</resources>
