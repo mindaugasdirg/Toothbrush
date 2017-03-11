@@ -31,7 +31,7 @@ public class MainScreen extends AppCompatActivity {
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                user.addExp(10);
+                user.addExp(1);
                 updateUserInfo();
                 saveUser();
             }
@@ -43,7 +43,7 @@ public class MainScreen extends AppCompatActivity {
             TextView username = (TextView) findViewById(R.id.username);
             username.setText(user.getUsername());
             TextView level = (TextView) findViewById(R.id.level);
-            level.setText(String.format("Lygis " + user.getLevel() + " " + user.getProgress() + " " + ));
+            level.setText("Lygis " + user.getLevel());
             ProgressBar progress = (ProgressBar)findViewById(R.id.levelProgress);
             progress.setProgress(user.getProgress());
         }
@@ -59,7 +59,13 @@ public class MainScreen extends AppCompatActivity {
     private void saveUser() {
         SharedPreferences.Editor editor = userInfo.edit();
         editor.putString("username", user.getUsername());
-        editor.putInt("exp", user.getLevel());
+        editor.putInt("exp", user.getExp());
+        editor.commit();
+    }
+
+    private void clearUser() {
+        SharedPreferences.Editor editor = userInfo.edit();
+        editor.clear();
         editor.commit();
     }
 }

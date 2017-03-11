@@ -1,5 +1,7 @@
 package hakergames.toothbrush;
 
+import android.util.Log;
+
 import java.util.Date;
 
 /**
@@ -11,19 +13,11 @@ public class User {
     private String username;
     private int exp;
     private int level;
-    private int averageTime;
-    private int streak;
-    private int longestTime;
-    private Date lastTime;
 
     public User(String username, int exp){
         this.username = username;
         this.exp = exp;
-
-        averageTime = 0;
-        streak = 0;
-        longestTime = 0;
-        lastTime = null;
+        level = 1;
 
         updateLevel();
     }
@@ -33,7 +27,11 @@ public class User {
     }
 
     private void updateLevel() {
-        level = (int)(0.01 * exp + 1);
+        int expNeed = (level + 1) * 10 - 10;
+        while(exp >= expNeed){
+            level++;
+            expNeed = (level + 1) * 10 - 10;
+        }
     }
 
     public int getLevel(){
@@ -50,43 +48,14 @@ public class User {
     }
 
     public int getExp(){
-        return level;
+        return exp;
     }
 
     public int getProgress(){
-        int expToNext = ((level + 1) * 10) * 100;
-        return exp / (expToNext - exp) * 100;
-    }
-
-    public void setAverageTime(int averageTime){
-        this.averageTime = averageTime;
-    }
-
-    public int getAverageTime(){
-        return averageTime;
-    }
-
-    public void setStreak(int streak){
-        this.streak = streak;
-    }
-
-    public int getStreak(){
-        return streak;
-    }
-
-    public void setLongestTime(int longestTime){
-        this.longestTime = longestTime;
-    }
-
-    public int getLongestTime(){
-        return longestTime;
-    }
-
-    public void setLastTime(Date lastTime){
-        this.lastTime = lastTime;
-    }
-
-    public Date getLastTime(){
-        return lastTime;
+        int expToNext = (level + 1) * 10 - 10;
+        int expToCurrent = level * 10 - 10;
+        Log.d("DEBUG", expToNext + " " + expToCurrent);
+        int progress = (int)((exp - expToCurrent) / (double)(expToNext - expToCurrent) * 100);
+        return progress;
     }
 }
