@@ -4,10 +4,6 @@ import android.util.Log;
 
 import java.util.Date;
 
-/**
- * Created by Mindaugas on 2017-03-11.
- */
-
 public class User {
     private int id;
     private String username;
