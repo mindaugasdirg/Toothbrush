@@ -7,12 +7,14 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.Chronometer;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,11 +33,9 @@ public class BluetoothService {
     private BluetoothDevice device;
     private BluetoothSocket socketBT = null;
 
-    private String readStream;
-    private String message;
     private Context context;
 
-    public BluetoothService(final Context context){
+    public BluetoothService(final Context context, final Command eventCommand){
         this.context = context;
 
         adapterBT = BluetoothAdapter.getDefaultAdapter();
@@ -43,25 +43,22 @@ public class BluetoothService {
         handler = new Handler(){
             public void handleMessage(android.os.Message msg){
                 if(msg.what == MESSAGE_READ){
-                    String readMessage = null;
-                    int number = -1;
-                    try {
-                        number = ByteBuffer.wrap((byte[]) msg.obj).getInt();
-                        readMessage = new String((byte[]) msg.obj);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    byte[] bytes = (byte[]) msg.obj;
+
+                    eventCommand.start();
+                    if(bytes[0] == 48 && bytes[1] == 48){
+                        eventCommand.end();
                     }
 
-                    //Log.d("READ_INT", Integer.toString(number));
-                    Log.d("READ", readMessage);
-                    readStream = readMessage;
+                    //Log.d("READ_BT", readMessage);
+                    Log.d("READ_BT", Character.toString((char)bytes[0]));
                 }
 
                 if(msg.what == CONNECTING_STATUS){
                     if(msg.arg1 == 1)
-                        Toast.makeText(context, "Connected to Device: " + (String)(msg.obj), Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "Prisijungė prie: " + (String)(msg.obj), Toast.LENGTH_LONG).show();
                     else
-                        Toast.makeText(context, "Connection Failed", Toast.LENGTH_LONG).show();;
+                        Toast.makeText(context, "Nepavyko prisijungti", Toast.LENGTH_LONG).show();;
                 }
             }
         };
@@ -83,10 +80,6 @@ public class BluetoothService {
         }
     }
 
-    public String getBuffer(){
-        return readStream;
-    }
-
     public void findDevice(){
         pairedDevices = adapterBT.getBondedDevices();
         if(adapterBT.isEnabled()) {
@@ -103,7 +96,7 @@ public class BluetoothService {
 
     public void connect(){
         if(!adapterBT.isEnabled()) {
-            Toast.makeText(context, "Bluetooth not on", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Bluetooth išjungtas", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -121,7 +114,7 @@ public class BluetoothService {
                     socketBT = createBluetoothSocket(device);
                 } catch (IOException e) {
                     fail = true;
-                    Toast.makeText(context, "Socket creation failed", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Nepavyko užmegzti ryšio", Toast.LENGTH_LONG).show();
                 }
                 // Establish the Bluetooth socket connection.
                 try {
@@ -134,7 +127,7 @@ public class BluetoothService {
                                 .sendToTarget();
                     } catch (IOException e2) {
                         //insert code to deal with this
-                        Toast.makeText(context, "Socket creation failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Nepavyko užmegzti ryšio", Toast.LENGTH_SHORT).show();
                     }
                 }
                 if(fail == false) {
@@ -175,7 +168,7 @@ public class BluetoothService {
         }
 
         public void run() {
-            byte[] buffer = new byte[1024];  // buffer store for the stream
+            byte[] buffer = new byte[16];  // buffer store for the stream
             int bytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs
@@ -188,6 +181,7 @@ public class BluetoothService {
                         mmInStream.read(buffer);
                     }
 
+                    Log.d("SEND", Integer.toString(bytes));
                     handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
                 } catch (IOException e) {

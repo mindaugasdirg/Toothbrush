@@ -1,37 +1,27 @@
 package hakergames.toothbrush;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class MainScreen extends AppCompatActivity {
     public static final String USER_INFO = "ToothBrush.UserInformation";
-    public static final String UNLCOKED_ACHIEVMENTS = "ToothBrush.UnlockedAchviements";
+    private static final String UNLOCKED_ACHIEVEMENTS = "ToothBrush.UnlockedAchviements";
 
     private User user;
-    private List<Achievment> Achievments;
+    private List<Achievement> Achievements;
     private BluetoothService btService;
+    private Event event;
 
 
     @Override
@@ -39,31 +29,18 @@ public class MainScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
 
-        btService = new BluetoothService(this);
-
-        SharedPreferences achievmentsInfo = getSharedPreferences(UNLCOKED_ACHIEVMENTS, 0);
-        Achievments = new ArrayList<Achievment>();
-        String[] Names = {
-                "30 min",
-                "Rytas ir vakaras",
-                "7 dienos"
-        };
-        String[] Descriptions = {
-                "Iš viso valeisi 30 min.",
-                "Dantis švarūs ir ryte ir vakare.",
-                "Dantys švarūs ir ryte ir vakare visą savaitę."
-        };
-
-        for(int i = 0; i < Names.length; i++){
-            Achievment achievment = new Achievment(i, Names[i], Descriptions[i]);
-
-            String key = Integer.toString(i);
-            if(achievmentsInfo.getBoolean(key, false)){
-                achievment.unlock();
+        // bluetooth service setup
+        Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
+        TextView noEvent = (TextView)findViewById(R.id.noEvent);
+        btService = new BluetoothService(this, new EventCommand());
+        Button bluetoothButton = (Button)findViewById(R.id.bluetooth);
+        bluetoothButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("PRESS", "Pressed Bluetooth button");
+                btService.sendMessage("1");
             }
-
-            Achievments.add(achievment);
-        }
+        });
 
         // setups user
         loadUser();
@@ -80,16 +57,33 @@ public class MainScreen extends AppCompatActivity {
             }
         });
 
-        Button bluetoothButton = (Button)findViewById(R.id.bluetooth);
-        bluetoothButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("PRESS", "Pressed Bluetooth button");
-                btService.sendMessage("1");
+        // setup achievements
+        SharedPreferences achievementsInfo = getSharedPreferences(UNLOCKED_ACHIEVEMENTS, 0);
+        Achievements = new ArrayList<Achievement>();
+        String[] Names = {
+                "30 min",
+                "Rytas ir vakaras",
+                "7 dienos"
+        };
+        String[] Descriptions = {
+                "Iš viso valeisi 30 min.",
+                "Dantis švarūs ir ryte ir vakare.",
+                "Dantys švarūs ir ryte ir vakare visą savaitę."
+        };
+
+        for(int i = 0; i < Names.length; i++){
+            Achievement achievement = new Achievement(i, Names[i], Descriptions[i]);
+
+            String key = Integer.toString(i);
+            if(achievementsInfo.getBoolean(key, false)){
+                achievement.unlock();
             }
-        });
+
+            Achievements.add(achievement);
+        }
     }
 
+    //------------------- User
     private void updateUserInfo() {
         if(user != null) {
             TextView username = (TextView) findViewById(R.id.username);
@@ -118,15 +112,47 @@ public class MainScreen extends AppCompatActivity {
         SharedPreferences.Editor editor = userInfo.edit();
         editor.putString("username", user.getUsername());
         editor.putInt("exp", user.getExp());
-        editor.commit();
+        editor.apply();
     }
 
     private void clearUser() {
-        Log.d("ENTER", "Enterring clearUser()");
+        Log.d("ENTER", "Entering clearUser()");
         SharedPreferences userInfo = getSharedPreferences(USER_INFO, 0);
 
         SharedPreferences.Editor editor = userInfo.edit();
         editor.clear();
-        editor.commit();
+        editor.apply();
     }
+    //------------------- User
+
+    //------------------- Events
+    public class EventCommand implements Command{
+        public void start(){
+            if(event == null || !event.isInProgress()){
+                Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
+                TextView noEvent = (TextView)findViewById(R.id.noEvent);
+
+                event = new Event();
+                stopwatch.setBase(SystemClock.elapsedRealtime());
+
+                stopwatch.setVisibility(View.VISIBLE);
+                noEvent.setVisibility(View.INVISIBLE);
+                stopwatch.start();
+            }
+        }
+
+        public void end(){
+            if(event.isInProgress()){
+                Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
+                TextView noEvent = (TextView)findViewById(R.id.noEvent);
+
+                event.endEvent();
+
+                stopwatch.setVisibility(View.INVISIBLE);
+                noEvent.setVisibility(View.VISIBLE);
+                stopwatch.stop();
+            }
+        }
+    }
+    //------------------- Events
 }
