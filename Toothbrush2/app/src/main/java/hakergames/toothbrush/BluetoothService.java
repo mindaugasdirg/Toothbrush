@@ -61,20 +61,20 @@ public class BluetoothService {
 
                 if(msg.what == CONNECTING_STATUS){
                     if(msg.arg1 == 1)
-                        Toast.makeText(context, "Prisijungė prie: Smart Toothbrush", Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "Connected to Teeth Buddy", Toast.LENGTH_LONG).show();
                     else
-                        Toast.makeText(context, "Nepavyko prisijungti", Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "Unable to connect", Toast.LENGTH_LONG).show();
                 }
             }
         };
 
         if (adapterBT == null) {
             // Device does not support Bluetooth
-            Toast.makeText(context, "Nerastas Bluetooth", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Bluetooth not found", Toast.LENGTH_LONG).show();
         }
 
         if(!adapterBT.isEnabled()){
-            Toast.makeText(context, "Bluetooth yra išjungtas", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Bluetooth is off", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -106,7 +106,7 @@ public class BluetoothService {
 
     public void connect(){
         if(!adapterBT.isEnabled()) {
-            Toast.makeText(context, "Bluetooth išjungtas", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Bluetooth is off", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -124,7 +124,7 @@ public class BluetoothService {
                     socketBT = createBluetoothSocket(device);
                 } catch (IOException e) {
                     fail = true;
-                    Toast.makeText(context, "Nepavyko užmegzti ryšio", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Unable to establish socket", Toast.LENGTH_LONG).show();
                 }
                 // Establish the Bluetooth socket connection.
                 try {
@@ -137,7 +137,7 @@ public class BluetoothService {
                                 .sendToTarget();
                     } catch (IOException e2) {
                         //insert code to deal with this
-                        Toast.makeText(context, "Nepavyko užmegzti ryšio", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Unable to establish socket", Toast.LENGTH_SHORT).show();
                     }
                 }
                 if(fail == false) {

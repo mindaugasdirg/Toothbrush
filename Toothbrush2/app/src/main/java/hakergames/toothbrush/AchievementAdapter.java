@@ -41,13 +41,12 @@ public class AchievementAdapter extends BaseAdapter {
 
         TextView unlocked = (TextView)achievementAdapter.findViewById(R.id.unlocked);
         if(Achievements.get(position).isUnlocked()){
-            unlocked.setText("Atrakintas");
+            unlocked.setText("Unlocked");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                name.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
-                unlocked.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
+                achievementAdapter.setBackground(context.getResources().getDrawable(R.drawable.unlocked, null));
             }
         } else {
-            unlocked.setText("Užrakintas");
+            unlocked.setText("Locked");
         }
 
         return achievementAdapter;

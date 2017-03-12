@@ -6,6 +6,7 @@ import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -31,6 +32,7 @@ public class MainScreen extends AppCompatActivity {
     private List<Achievement> Achievements;
     private BluetoothService btService;
     private Event event;
+    EventCommand command;
 
 
     @Override
@@ -39,9 +41,20 @@ public class MainScreen extends AppCompatActivity {
         setContentView(R.layout.activity_main_screen);
 
         // bluetooth service setup
-        Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
-        TextView noEvent = (TextView)findViewById(R.id.noEvent);
         btService = new BluetoothService(this, new EventCommand());
+
+        command = new EventCommand();
+        Button testButton = (Button)findViewById(R.id.button);
+        testButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(event != null && event.isInProgress()){
+                    command.end();
+                }else{
+                    command.start();
+                }
+            }
+        });
 
         // setups user
         loadUser();
@@ -81,7 +94,7 @@ public class MainScreen extends AppCompatActivity {
     private void loadUser() {
         SharedPreferences userInfo = getSharedPreferences(USER_INFO, 0);
 
-        String username = userInfo.getString("username", "Nėra vardo");
+        String username = userInfo.getString("username", "No name");
         int exp = userInfo.getInt("exp", 0);
         long totalTime = userInfo.getLong("total", 0);
         String dateString = userInfo.getString("date", "");
@@ -221,7 +234,7 @@ public class MainScreen extends AppCompatActivity {
     //------------------- Achievements
 
     public void setupStats(){
-        TextView times = (TextView)findViewById(R.id.times);
+        TextView times = (TextView)findViewById(R.id.time);
         times.setText(Integer.toString(user.getTimes()));
 
         TextView totalTimeText = (TextView)findViewById(R.id.totalTime);
@@ -234,14 +247,13 @@ public class MainScreen extends AppCompatActivity {
         TextView lastDate = (TextView)findViewById(R.id.lastDate);
         Date date = user.getLastDate();
         if(date == null){
-            lastDate.setText("Nėra");
+            lastDate.setText("No information");
         } else {
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(date);
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            lastDate.setText(String.format("%1-%2$02d-%3$02d", year, month, day));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd\nHH:mm:ss");
+            String formattedDate = dateFormat.format(calendar.getTime());
+            lastDate.setText(formattedDate);
         }
 
         TextView lastTimeText = (TextView)findViewById(R.id.lastTime);
@@ -249,6 +261,9 @@ public class MainScreen extends AppCompatActivity {
         long lastTimeH = lastTime / (60 * 60 * 1000);
         long lastTimeM = (lastTime - lastTimeH * 3600 * 1000) / (60 * 1000);
         long lastTimeS = (lastTime - lastTimeH * 3600 * 1000 - lastTimeM * 60000) / 1000;
-        lastTimeText.setText(String.format("%1$02d:%2$02d:%3$02d", lastTimeH, lastTimeM, lastTimeS));
+        String hours = String.format("%1$02d", lastTimeH);
+        String minutes = String.format("%1$02d", lastTimeM);
+        String seconds = String.format("%1$02d", lastTimeS);
+        lastTimeText.setText(hours + ":" + minutes + ":" + seconds);
     }
 }

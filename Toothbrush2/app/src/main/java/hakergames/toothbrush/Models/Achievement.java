@@ -76,13 +76,13 @@ public class Achievement {
         List<Achievement> Achievements = new ArrayList<Achievement>();
         String[] Names = {
                 "30 min",
-                "2 kartai",
+                "2 times",
                 "2 min"
         };
         String[] Descriptions = {
-                "Iš viso valeisi 30 min.",
-                "Dantys išvalyti 2 kartus.",
-                "Dantys buvo valomi 2 min nesustojus."
+                "Wash teeth for 30 minutes.",
+                "Wash teeth 3 times.",
+                "Wash teeth for 2 minutes."
         };
         int[] Exps = {
                 34, 33, 33
