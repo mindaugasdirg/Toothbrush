@@ -6,7 +6,6 @@ import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -42,16 +41,25 @@ public class MainScreen extends AppCompatActivity {
 
         // bluetooth service setup
         btService = new BluetoothService(this, new EventCommand());
-
-        command = new EventCommand();
-        Button testButton = (Button)findViewById(R.id.button);
-        testButton.setOnClickListener(new View.OnClickListener() {
+        Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
+        stopwatch.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
             @Override
-            public void onClick(View v) {
-                if(event != null && event.isInProgress()){
-                    command.end();
-                }else{
-                    command.start();
+            public void onChronometerTick(Chronometer chronometer) {
+                if(!event.isInProgress()){
+                    Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
+                    LinearLayout stopwatchContainer = (LinearLayout)findViewById(R.id.stopwatchContainer);
+                    TextView noEvent = (TextView)findViewById(R.id.noEvent);
+
+                    user.setLastDate(event.getEventDate());
+                    user.setLastTime(event.getDeltaTime());
+                    saveEvent();
+                    checkAchievements();
+                    updateUserInfo();
+                    saveUser();
+
+                    stopwatchContainer.setVisibility(View.INVISIBLE);
+                    noEvent.setVisibility(View.VISIBLE);
+                    stopwatch.stop();
                 }
             }
         });
@@ -169,6 +177,7 @@ public class MainScreen extends AppCompatActivity {
 
     public class EventCommand implements Command {
         public void start(){
+            Log.d("SB_HACKERGAMES", "MainScreen - starting event");
             if(event == null || !event.isInProgress()){
                 Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
                 LinearLayout stopwatchContainer = (LinearLayout)findViewById(R.id.stopwatchContainer);
@@ -184,22 +193,9 @@ public class MainScreen extends AppCompatActivity {
         }
 
         public void end(){
+            Log.d("SB_HACKERGAMES", "MainScreen - ending event");
             if(event.isInProgress() || event == null){
-                Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
-                LinearLayout stopwatchContainer = (LinearLayout)findViewById(R.id.stopwatchContainer);
-                TextView noEvent = (TextView)findViewById(R.id.noEvent);
-
                 event.endEvent();
-                user.setLastDate(event.getEventDate());
-                user.setLastTime(event.getDeltaTime());
-                saveEvent();
-                checkAchievements();
-                updateUserInfo();
-                saveUser();
-
-                stopwatchContainer.setVisibility(View.INVISIBLE);
-                noEvent.setVisibility(View.VISIBLE);
-                stopwatch.stop();
             }
         }
     }

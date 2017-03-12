@@ -1,7 +1,14 @@
 <resources>
-    <string name="app_name">ToothBrush</string>
-    <string name="username">Vardas</string>
-    <string name="level">1 lygis</string>
-    <string name="registration">Prisijungimas</string>
-    <string name="save_button">Prisijungti</string>
+    <string name="app_name">Teeth Buddy</string>
+    <string name="username">Name</string>
+    <string name="registration">Login</string>
+    <string name="save_button">Login</string>
+    <string name="level">Level</string>
+    <string name="no_event">Not washing</string>
+    <string name="stopwatchLabel">Washing teeth:</string>
+    <string name="clearData">Delete data</string>
+    <string name="total_time">Whole duration</string>
+    <string name="last_time">Last duration</string>
+    <string name="last_date">Last time</string>
+    <string name="times">Times</string>
 </resources>

@@ -33,11 +33,19 @@ public class BluetoothService {
     private BluetoothSocket socketBT = null;
 
     private Context context;
+
     private byte[] previous;
+    private boolean startedEvent;
+    final Command eventCommand;
 
     public BluetoothService(final Context context, final Command eventCommand){
         this.context = context;
+
+        Log.d("SB_HACKERGAMES", "BluetoothService - Setting up BT");
+        this.eventCommand = eventCommand;
         previous = new byte[2];
+        startedEvent = false;
+        Log.d("SB_HACKERGAMES", "startedEvent changed to false");
 
         adapterBT = BluetoothAdapter.getDefaultAdapter();
 
@@ -47,16 +55,20 @@ public class BluetoothService {
                     byte[] bytes = (byte[]) msg.obj;
 
                     eventCommand.start();
+                    startedEvent = true;
+                    Log.d("SB_HACKERGAMES", "startedEvent changed to true");
                     if(bytes[0] == 48 && bytes[1] == 48 && bytes[0] != previous[0] && bytes[1] != previous[1]){
+                        Log.d("SB_HACKERGAMES", "BluetoothService - got 00");
                         previous[0] = bytes[0];
                         previous[1] = bytes[1];
-                        eventCommand.end();
+                        //eventCommand.end();
                     } else {
+                        Log.d("SB_HACKERGAMES", "BluetoothService - resuming normal listenning");
                         previous[0] = 0;
                         previous[1] = 0;
                     }
 
-                    Log.d("DEBUG", Byte.toString(bytes[0]));
+                    Log.d("SB_HACKERGAMES", "Got: " + Byte.toString(bytes[0]));
                 }
 
                 if(msg.what == CONNECTING_STATUS){
@@ -81,12 +93,6 @@ public class BluetoothService {
         findDevice();
         if(device != null) {
             connect();
-        }
-    }
-
-    public void sendMessage(String message){
-        if(device != null) {
-            connectedThread.write(message);
         }
     }
 
@@ -184,6 +190,20 @@ public class BluetoothService {
             // Keep listening to the InputStream until an exception occurs
             while (true) {
                 try {
+                    long startTime = System.currentTimeMillis() / 1000;
+                    long now;
+
+                    while(mmInStream.available() <= 0){
+                        now = System.currentTimeMillis() / 1000;
+
+                        if(now - startTime > 5 && startedEvent){
+                            Log.d("SB_HACKERGAMES", Long.toString(now - startTime));
+                            eventCommand.end();
+                            startedEvent = false;
+                            Log.d("SB_HACKERGAMES", "startedEvent changed to false");
+                        }
+                    }
+
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
                     if(bytes != 0) {
@@ -193,7 +213,10 @@ public class BluetoothService {
 
                     handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
+
                 } catch (IOException e) {
+                    Log.d("SB_HACKERGAMES", "Kvailas budas");
+                    eventCommand.end();
                     break;
                 }
             }

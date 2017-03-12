@@ -11,7 +11,7 @@ public class Event {
     private boolean inProgress;
 
     public Event(){
-        Log.d("CREATE", "creating new event");
+        Log.d("SB", "creating new event");
         eventDate = new Date();
         startTime = System.currentTimeMillis();
 
@@ -24,7 +24,7 @@ public class Event {
     }
 
     public void endEvent(){
-        Log.d("END", "ending event");
+        Log.d("SB", "ending event");
         deltaTime = System.currentTimeMillis() - startTime;
 
         inProgress = false;
