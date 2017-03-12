@@ -7,14 +7,11 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
-import android.widget.Chronometer;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
@@ -49,23 +46,20 @@ public class BluetoothService {
                     if(bytes[0] == 48 && bytes[1] == 48){
                         eventCommand.end();
                     }
-
-                    //Log.d("READ_BT", readMessage);
-                    Log.d("READ_BT", Character.toString((char)bytes[0]));
                 }
 
                 if(msg.what == CONNECTING_STATUS){
                     if(msg.arg1 == 1)
-                        Toast.makeText(context, "Prisijungė prie: " + (String)(msg.obj), Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "Prisijungė prie: " + msg.obj, Toast.LENGTH_LONG).show();
                     else
-                        Toast.makeText(context, "Nepavyko prisijungti", Toast.LENGTH_LONG).show();;
+                        Toast.makeText(context, "Nepavyko prisijungti", Toast.LENGTH_LONG).show();
                 }
             }
         };
 
         if (adapterBT == null) {
             // Device does not support Bluetooth
-            Toast.makeText(context, "Nerastas Bluetooth", Toast.LENGTH_LONG).show();;
+            Toast.makeText(context, "Nerastas Bluetooth", Toast.LENGTH_LONG).show();
         }
 
         findDevice();
@@ -181,7 +175,6 @@ public class BluetoothService {
                         mmInStream.read(buffer);
                     }
 
-                    Log.d("SEND", Integer.toString(bytes));
                     handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
                 } catch (IOException e) {

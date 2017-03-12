@@ -5,16 +5,33 @@ public class Achievement {
     private String name;
     private String description;
     private boolean unlocked;
+    private int exp;
+    private Requirement requirement;
 
-    public Achievement(int id, String name, String description){
+    public Achievement(int id, String name, String description, int exp, Requirement requirement){
         this.id = id;
         this.name = name;
         this.description = description;
-        unlocked = false;
+        this.exp = exp;
+        this.unlocked = false;
+        this.requirement = requirement;
     }
 
-    public void unlock(){
+    private void unlock(){
         unlocked = true;
+    }
+
+    public void unlockNoXp(){
+        unlocked = true;
+    }
+
+    public int check(){
+        if(requirement.check()){
+            unlock();
+            return exp;
+        }
+
+        return 0;       // if requirement not met 0 xp will be added
     }
 
     public boolean isUnlocked(){
@@ -35,5 +52,9 @@ public class Achievement {
 
     public String getDescription(){
         return description;
+    }
+
+    public interface Requirement {
+        public boolean check();
     }
 }

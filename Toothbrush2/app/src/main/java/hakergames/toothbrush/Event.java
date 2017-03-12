@@ -1,9 +1,6 @@
 package hakergames.toothbrush;
 
 import android.util.Log;
-import android.view.View;
-import android.widget.Chronometer;
-import android.widget.TextView;
 
 import java.util.Date;
 
@@ -13,13 +10,17 @@ public class Event {
     private long deltaTime;
     private boolean inProgress;
 
-
     public Event(){
         Log.d("CREATE", "creating new event");
         eventDate = new Date();
         startTime = System.currentTimeMillis();
 
         inProgress = true;
+    }
+
+    public Event(Date eventDate, long deltaTime){
+        this.eventDate = eventDate;
+        this.deltaTime = deltaTime;
     }
 
     public void endEvent(){

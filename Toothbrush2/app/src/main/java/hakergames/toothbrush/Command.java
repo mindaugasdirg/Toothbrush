@@ -1,6 +1,6 @@
 package hakergames.toothbrush;
 
 public interface Command {
-    public void start();
-    public void end();
+    void start();
+    void end();
 }
