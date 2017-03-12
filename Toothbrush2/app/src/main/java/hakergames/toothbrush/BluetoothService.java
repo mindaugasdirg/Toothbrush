@@ -15,6 +15,8 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
+import hakergames.toothbrush.Models.Command;
+
 public class BluetoothService {
     private static final UUID BT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -31,9 +33,11 @@ public class BluetoothService {
     private BluetoothSocket socketBT = null;
 
     private Context context;
+    private byte[] previous;
 
     public BluetoothService(final Context context, final Command eventCommand){
         this.context = context;
+        previous = new byte[2];
 
         adapterBT = BluetoothAdapter.getDefaultAdapter();
 
@@ -43,14 +47,21 @@ public class BluetoothService {
                     byte[] bytes = (byte[]) msg.obj;
 
                     eventCommand.start();
-                    if(bytes[0] == 48 && bytes[1] == 48){
+                    if(bytes[0] == 48 && bytes[1] == 48 && bytes[0] != previous[0] && bytes[1] != previous[1]){
+                        previous[0] = bytes[0];
+                        previous[1] = bytes[1];
                         eventCommand.end();
+                    } else {
+                        previous[0] = 0;
+                        previous[1] = 0;
                     }
+
+                    Log.d("DEBUG", Byte.toString(bytes[0]));
                 }
 
                 if(msg.what == CONNECTING_STATUS){
                     if(msg.arg1 == 1)
-                        Toast.makeText(context, "Prisijungė prie: " + msg.obj, Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "Prisijungė prie: Smart Toothbrush", Toast.LENGTH_LONG).show();
                     else
                         Toast.makeText(context, "Nepavyko prisijungti", Toast.LENGTH_LONG).show();
                 }
@@ -60,6 +71,11 @@ public class BluetoothService {
         if (adapterBT == null) {
             // Device does not support Bluetooth
             Toast.makeText(context, "Nerastas Bluetooth", Toast.LENGTH_LONG).show();
+        }
+
+        if(!adapterBT.isEnabled()){
+            Toast.makeText(context, "Bluetooth yra išjungtas", Toast.LENGTH_LONG).show();
+            return;
         }
 
         findDevice();

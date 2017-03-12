@@ -6,7 +6,6 @@ import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -14,14 +13,19 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import hakergames.toothbrush.Models.Achievement;
+import hakergames.toothbrush.Models.Command;
+import hakergames.toothbrush.Models.Event;
+import hakergames.toothbrush.Models.User;
+
 public class MainScreen extends AppCompatActivity {
     public static final String USER_INFO = "ToothBrush.UserInformation";
-    private static final String UNLOCKED_ACHIEVEMENTS = "ToothBrush.UnlockedAchviements";
-    private static final String LAST_EVENT = "ToothBrush.LastEvent";
+    public static final String UNLOCKED_ACHIEVEMENTS = "ToothBrush.UnlockedAchviements";
+    public static final String LAST_EVENT = "ToothBrush.LastEvent";
 
     private User user;
     private List<Achievement> Achievements;
@@ -43,22 +47,14 @@ public class MainScreen extends AppCompatActivity {
         loadUser();
         updateUserInfo();
 
-        Button addButton = (Button)findViewById(R.id.button2);
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                user.addExp(1);
-                updateUserInfo();
-                saveUser();
-            }
-        });
-
         // setup achievements
-        loadAchievements();
+        Achievements = Achievement.loadAchievements(this, user);
 
         GridView achievementGrid = (GridView)findViewById(R.id.achievementContainer);
         achievementGrid.setNumColumns(3);
         achievementGrid.setAdapter(new AchievementAdapter(this, Achievements));
+
+        setupStats();
     }
 
     //------------------- User
@@ -70,13 +66,15 @@ public class MainScreen extends AppCompatActivity {
             level.setText(getString(R.string.level) + " " + user.getLevel());
             ProgressBar progress = (ProgressBar)findViewById(R.id.levelProgress);
             progress.setProgress(user.getProgress());
-            user.setTimes(user.getTimes() + 1);
-            if(event != null) {
-                user.setLastDate(event.getEventDate());
-                user.setLastTime(event.getDeltaTime());
+
+            if(event != null && !event.isInProgress()) {
+                int times = user.getTimes();
+                times++;
+                user.setTimes(times);
             }
         }
 
+        setupStats();
         saveUser();
     }
 
@@ -117,15 +115,6 @@ public class MainScreen extends AppCompatActivity {
         editor.putInt("times", user.getTimes());
         editor.apply();
     }
-
-    private void clearUser() {
-        Log.d("ENTER", "Entering clearUser()");
-        SharedPreferences userInfo = getSharedPreferences(USER_INFO, 0);
-
-        SharedPreferences.Editor editor = userInfo.edit();
-        editor.clear();
-        editor.apply();
-    }
     //------------------- User
 
     //------------------- Events
@@ -141,11 +130,31 @@ public class MainScreen extends AppCompatActivity {
         if(event.getEventDate() != null) {
             user.setLastDate(event.getEventDate());
         }
-
-        updateUserInfo();
     }
 
-    public class EventCommand implements Command{
+    public void loadEvent(){
+        SharedPreferences eventPref = getSharedPreferences(LAST_EVENT, 0);
+        Date date = null;
+        long time = 0;
+
+        if(eventPref.contains("date")){
+            String dateString = eventPref.getString("date", "");
+
+            if(!dateString.isEmpty()){
+                SimpleDateFormat dateFormat = new SimpleDateFormat();
+                try {
+                    date = dateFormat.parse(dateString);
+                }catch (Exception e) { }
+            }
+        }
+        if(eventPref.contains("time")){
+            time = eventPref.getLong("time", 0);
+        }
+
+        event = new Event(date, time);
+    }
+
+    public class EventCommand implements Command {
         public void start(){
             if(event == null || !event.isInProgress()){
                 Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
@@ -162,15 +171,18 @@ public class MainScreen extends AppCompatActivity {
         }
 
         public void end(){
-            if(event.isInProgress()){
+            if(event.isInProgress() || event == null){
                 Chronometer stopwatch = (Chronometer)findViewById(R.id.eventTimer);
                 LinearLayout stopwatchContainer = (LinearLayout)findViewById(R.id.stopwatchContainer);
                 TextView noEvent = (TextView)findViewById(R.id.noEvent);
 
                 event.endEvent();
+                user.setLastDate(event.getEventDate());
+                user.setLastTime(event.getDeltaTime());
                 saveEvent();
-                updateUserInfo();
                 checkAchievements();
+                updateUserInfo();
+                saveUser();
 
                 stopwatchContainer.setVisibility(View.INVISIBLE);
                 noEvent.setVisibility(View.VISIBLE);
@@ -181,66 +193,15 @@ public class MainScreen extends AppCompatActivity {
     //------------------- Events
 
     //------------------- Achievements
-    private void loadAchievements() {
-        SharedPreferences achievementsInfo = getSharedPreferences(UNLOCKED_ACHIEVEMENTS, 0);
-        Achievements = new ArrayList<Achievement>();
-        String[] Names = {
-                "30 min",
-                "2 kartai",
-                "2 min"
-        };
-        String[] Descriptions = {
-                "Iš viso valeisi 30 min.",
-                "Dantys išvalyti 2 kartus.",
-                "Dantys buvo valomi 2 min nesustojus."
-        };
-        int[] Exps = {
-                10, 10, 10
-        };
-        Achievement.Requirement[] Requirements = {
-                new Achievement.Requirement() {
-                    @Override
-                    public boolean check() {
-                        Log.d("CMP", Float.toString(user.getTotalTime() / 6000f));
-                        Log.d("ACHV", Boolean.toString((user.getTotalTime() / 6000f) >= 30));
-                        return (user.getTotalTime() / 6000f) >= 30;
-                    }
-                },
-                new Achievement.Requirement() {
-                    @Override
-                    public boolean check() {
-                        Log.d("CMP", Integer.toString(user.getTimes()));
-                        Log.d("ACHV", Boolean.toString(user.getTimes() >= 2));
-                        return user.getTimes() >= 2;
-                    }
-                },
-                new Achievement.Requirement() {
-                    @Override
-                    public boolean check() {
-                        Log.d("CMP", Float.toString(user.getLastTime() / 6000f));
-                        Log.d("ACHV", Boolean.toString((user.getLastTime() / 6000f) >= 2));
-                        return (user.getLastTime() / 6000f) >= 2;
-                    }
-                }
-        };
-
-        for(int i = 0; i < Names.length; i++){
-            Achievement achievement = new Achievement(i, Names[i], Descriptions[i], Exps[i], Requirements[i]);
-
-            String key = Integer.toString(i);
-            if(achievementsInfo.getBoolean(key, false)){
-                achievement.unlockNoXp();
-            }
-
-            Achievements.add(achievement);
-        }
-    }
-
     public void checkAchievements(){
         for(int i = 0; i < Achievements.size(); i++){
-            user.addExp(Achievements.get(i).check());
+            int xp = Achievements.get(i).check();
+            Log.d("XP", Integer.toString(xp));
+            user.addExp(xp);
             Log.d("UNLOCKED", Boolean.toString(Achievements.get(i).isUnlocked()));
         }
+
+        saveAchievements();
 
         GridView achievementGrid = (GridView)findViewById(R.id.achievementContainer);
         achievementGrid.setNumColumns(3);
@@ -258,4 +219,36 @@ public class MainScreen extends AppCompatActivity {
         editor.apply();
     }
     //------------------- Achievements
+
+    public void setupStats(){
+        TextView times = (TextView)findViewById(R.id.times);
+        times.setText(Integer.toString(user.getTimes()));
+
+        TextView totalTimeText = (TextView)findViewById(R.id.totalTime);
+        long totalTime = user.getTotalTime();
+        long totalTimeH = totalTime / (60 * 60 * 1000);
+        long totalTimeM = (totalTime - totalTimeH * 3600 * 1000) / (60 * 1000);
+        long totalTimeS = (totalTime - totalTimeH * 3600 * 1000 - totalTimeM * 60000) / 1000;
+        totalTimeText.setText(String.format("%1$02d:%2$02d:%3$02d", totalTimeH, totalTimeM, totalTimeS));
+
+        TextView lastDate = (TextView)findViewById(R.id.lastDate);
+        Date date = user.getLastDate();
+        if(date == null){
+            lastDate.setText("Nėra");
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            lastDate.setText(String.format("%1-%2$02d-%3$02d", year, month, day));
+        }
+
+        TextView lastTimeText = (TextView)findViewById(R.id.lastTime);
+        long lastTime = user.getTotalTime();
+        long lastTimeH = lastTime / (60 * 60 * 1000);
+        long lastTimeM = (lastTime - lastTimeH * 3600 * 1000) / (60 * 1000);
+        long lastTimeS = (lastTime - lastTimeH * 3600 * 1000 - lastTimeM * 60000) / 1000;
+        lastTimeText.setText(String.format("%1$02d:%2$02d:%3$02d", lastTimeH, lastTimeM, lastTimeS));
+    }
 }

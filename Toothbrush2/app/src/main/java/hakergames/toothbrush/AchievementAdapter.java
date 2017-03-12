@@ -6,11 +6,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.TextView;
 
 import java.util.List;
 
-import static android.support.v4.content.ContextCompat.getColor;
+import hakergames.toothbrush.Models.Achievement;
+
+import static android.widget.GridView.AUTO_FIT;
 
 public class AchievementAdapter extends BaseAdapter {
     private Context context;
@@ -38,12 +41,13 @@ public class AchievementAdapter extends BaseAdapter {
 
         TextView unlocked = (TextView)achievementAdapter.findViewById(R.id.unlocked);
         if(Achievements.get(position).isUnlocked()){
-            unlocked.setText("Unlocked");
+            unlocked.setText("Atrakintas");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                unlocked.setBackgroundColor(context.getResources().getColor(R.color.colorAccent, null));
+                name.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
+                unlocked.setTextColor(context.getResources().getColor(R.color.colorAccent, null));
             }
         } else {
-            unlocked.setText("Locked");
+            unlocked.setText("Užrakintas");
         }
 
         return achievementAdapter;

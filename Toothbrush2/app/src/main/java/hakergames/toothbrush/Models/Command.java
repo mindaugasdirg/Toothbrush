@@ -1,4 +1,4 @@
-package hakergames.toothbrush;
+package hakergames.toothbrush.Models;
 
 public interface Command {
     void start();

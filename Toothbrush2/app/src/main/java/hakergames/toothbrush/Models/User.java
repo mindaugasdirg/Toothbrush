@@ -1,6 +1,4 @@
-package hakergames.toothbrush;
-
-import android.util.Log;
+package hakergames.toothbrush.Models;
 
 import java.util.Date;
 
@@ -29,10 +27,10 @@ public class User {
     }
 
     private void updateLevel() {
-        int expNeed = (level + 1) * 10 - 10;
+        int expNeed = (level + 1) * 100 - 100;
         while(exp >= expNeed){
             level++;
-            expNeed = (level + 1) * 10 - 10;
+            expNeed = (level + 1) * 100 - 100;
         }
     }
 
@@ -86,8 +84,8 @@ public class User {
     }
 
     public int getProgress(){
-        int expToNext = (level + 1) * 10 - 10;
-        int expToCurrent = level * 10 - 10;
+        int expToNext = (level + 1) * 100 - 100;
+        int expToCurrent = level * 100 - 100;
         int progress = (int)((exp - expToCurrent) / (double)(expToNext - expToCurrent) * 100);
         return progress;
     }
