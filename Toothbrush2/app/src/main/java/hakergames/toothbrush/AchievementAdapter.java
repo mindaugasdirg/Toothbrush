@@ -30,25 +30,20 @@ public class AchievementAdapter extends BaseAdapter {
 
         View achievementAdapter;
 
-        if(view == null){
-            achievementAdapter = new View(context);
-            achievementAdapter = inflater.inflate(R.layout.achievement_grid, null);
+        achievementAdapter = new View(context);
+        achievementAdapter = inflater.inflate(R.layout.achievement_grid, null);
 
-            TextView name = (TextView)achievementAdapter.findViewById(R.id.name);
-            name.setText(Achievements.get(position).getName());
+        TextView name = (TextView)achievementAdapter.findViewById(R.id.name);
+        name.setText(Achievements.get(position).getName());
 
-            TextView unlocked = (TextView)achievementAdapter.findViewById(R.id.unlocked);
-            if(Achievements.get(position).isUnlocked()){
-                unlocked.setText("Unlocked");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    unlocked.setBackgroundColor(context.getResources().getColor(R.color.colorAccent, null));
-                }
-            } else {
-                unlocked.setText("Locked");
+        TextView unlocked = (TextView)achievementAdapter.findViewById(R.id.unlocked);
+        if(Achievements.get(position).isUnlocked()){
+            unlocked.setText("Unlocked");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                unlocked.setBackgroundColor(context.getResources().getColor(R.color.colorAccent, null));
             }
-
         } else {
-            achievementAdapter = (View) view;
+            unlocked.setText("Locked");
         }
 
         return achievementAdapter;

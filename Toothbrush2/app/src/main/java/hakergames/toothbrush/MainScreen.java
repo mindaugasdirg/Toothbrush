@@ -239,7 +239,12 @@ public class MainScreen extends AppCompatActivity {
     public void checkAchievements(){
         for(int i = 0; i < Achievements.size(); i++){
             user.addExp(Achievements.get(i).check());
+            Log.d("UNLOCKED", Boolean.toString(Achievements.get(i).isUnlocked()));
         }
+
+        GridView achievementGrid = (GridView)findViewById(R.id.achievementContainer);
+        achievementGrid.setNumColumns(3);
+        achievementGrid.setAdapter(new AchievementAdapter(this, Achievements));
     }
 
     public void saveAchievements(){
